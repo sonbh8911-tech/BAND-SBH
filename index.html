@@ -81,13 +81,28 @@
 .bpa-status.err{color:var(--accent-2);}
 
 /* 코드 진행 칩 */
-.bpa-chip-row{display:flex; gap:8px; overflow-x:auto; padding:6px 2px 10px;}
+.bpa-chip-row{display:flex; gap:10px; overflow-x:auto; padding:6px 2px 10px;}
+.bpa-chip-wrap{flex:0 0 auto; display:flex; flex-direction:column; align-items:center; gap:5px;}
 .bpa-chip{
-  flex:0 0 auto; position:relative; background:var(--bg-soft); border:1px solid var(--line);
+  position:relative; background:var(--bg-soft); border:1px solid var(--line);
   color:var(--text); font-family:'Kalam', cursive; font-weight:700; font-size:20px;
   padding:10px 18px; border-radius:12px;
 }
 .bpa-chip.active{background:var(--accent); color:#1F2A25;}
+.bpa-measure-input{width:46px; text-align:center; background:var(--bg-soft); border:1px solid var(--line); color:var(--text); border-radius:7px; font-size:11px; padding:3px 0; font-family:inherit;}
+
+/* 기타 타브 */
+.bpa-tab-row{display:flex; gap:10px; overflow-x:auto; padding:4px 2px 10px;}
+.bpa-tab-measure{flex:0 0 auto; background:var(--bg-soft); border:1px solid var(--line); border-radius:10px; padding:8px 12px 10px; text-align:center; min-width:78px;}
+.bpa-tab-head{font-size:10px; color:var(--text-muted); margin-bottom:2px;}
+.bpa-tab-chord{font-family:'Kalam', cursive; font-weight:700; font-size:17px; color:var(--accent);}
+.bpa-tab-strings{font-family:'Space Grotesk', monospace; font-size:11.5px; line-height:1.55; color:var(--text); text-align:left; margin:6px 0 0; white-space:pre;}
+.bpa-tab-notes{font-size:11px; color:var(--text-muted); margin:8px 0 0; letter-spacing:0.3px;}
+.bpa-tab-empty{font-size:10.5px; color:var(--text-muted); margin-top:8px; line-height:1.5; max-width:70px;}
+.bpa-tab-drum-grid{display:flex; flex-direction:column; gap:4px; margin-top:8px;}
+.bpa-tab-drum-row{display:flex; gap:2px; justify-content:center;}
+.bpa-tab-drum-cell{width:8px; height:8px; border-radius:2px; background:var(--bg); border:1px solid var(--line); display:inline-block;}
+.bpa-tab-drum-cell.on{background:var(--drum); border-color:var(--drum);}
 .bpa-transport{display:flex; gap:8px; align-items:center; margin-top:4px;}
 .bpa-play-btn{background:var(--surface-2); border:1px solid var(--line); color:var(--text); border-radius:10px; padding:8px 14px; font-size:13px; font-weight:500; text-decoration:none; display:inline-block;}
 .bpa-play-btn:hover{border-color:var(--accent);}
@@ -135,7 +150,7 @@
   <div class="bpa-instruments" id="instRow"></div>
 
   <p class="bpa-section-label">2. 코드 진행 만들기</p>
-  <div class="bpa-mode-tabs">
+  <div class="bpa-mode-tabs" id="inputModeTabs">
     <button class="bpa-mode-btn active" data-mode="text">직접 입력</button>
     <button class="bpa-mode-btn" data-mode="image">악보 업로드</button>
   </div>
@@ -169,6 +184,7 @@
 
   <p class="bpa-section-label">3. 코드 진행</p>
   <div class="bpa-panel">
+    <p class="bpa-hint" style="margin-top:0;">각 코드 아래 숫자로 원곡 기준 마디 수를 입력하세요 (기본값 1마디).</p>
     <div class="bpa-chip-row" id="chipRow"></div>
     <div class="bpa-transport">
       <button class="bpa-play-btn" id="playAllBtn">▶ 전체 재생</button>
@@ -177,7 +193,18 @@
     </div>
   </div>
 
-  <p class="bpa-section-label">4. 편곡 악보 보기 (학생용)</p>
+  <p class="bpa-section-label">4. 편곡 악보 (마디별 보기)</p>
+  <div class="bpa-panel">
+    <p class="bpa-hint" style="margin-top:0;">코드 진행과 마디 수를 기준으로 악기별 간단 편곡 악보를 보여줘요. 기타는 타브, 피아노는 코드보, 드럼은 드럼보만 담고, 멜로디·가사는 포함하지 않아요.</p>
+    <div class="bpa-mode-tabs" id="scoreTabs">
+      <button class="bpa-mode-btn active" data-score="guitar">기타 타브</button>
+      <button class="bpa-mode-btn" data-score="piano">피아노 코드보</button>
+      <button class="bpa-mode-btn" data-score="drum">드럼보</button>
+    </div>
+    <div class="bpa-tab-row" id="scoreRow"></div>
+  </div>
+
+  <p class="bpa-section-label">5. 편곡 악보 보기 (학생용)</p>
   <div class="bpa-panel">
     <label class="bpa-upload-btn" for="sheetFileInput">
       🎼 학생들에게 보여줄 편곡 악보 첨부 (PDF 또는 이미지)
@@ -194,10 +221,10 @@
     </div>
   </div>
 
-  <p class="bpa-section-label">5. 연주 방법 보기</p>
+  <p class="bpa-section-label">6. 연주 방법 보기</p>
   <div class="bpa-diagram" id="diagramPanel"></div>
 
-  <p class="bpa-footer-note" id="footerNote">이 앱은 데모 프로토타입이에요. 코드 다이어그램은 자주 쓰이는 손모양을 기준으로 하며, 실제 지도 시 확인 후 사용해 주세요. 악보 코드 인식 기능은 Google Gemini API로 작동하며 본인의 API 키가 필요해요. 편곡 악보 보기는 AI 없이 파일을 그대로 보여주는 기능이라 키가 없어도 돼요.</p>
+  <p class="bpa-footer-note" id="footerNote">이 앱은 데모 프로토타입이에요. "편곡 악보"는 코드·마디 번호만 담은 간단 버전이에요 — 기타는 타브(자주 쓰이는 손모양 기준), 피아노는 코드+구성음, 드럼은 기본 리듬을 마디마다 보여주고, 멜로디·가사는 포함하지 않아요. 다이어그램은 실제 지도 시 확인 후 사용해 주세요. 악보 코드 인식 기능은 Google Gemini API로 작동하며 본인의 API 키가 필요해요. 편곡 악보(PDF/이미지) 보기는 AI 없이 파일을 그대로 보여주는 기능이라 키가 없어도 돼요.</p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
@@ -241,13 +268,28 @@
     'G_minor':{frets:[0,2,1,0]},
   };
 
+  const DRUM_PATTERN = {
+    hat:   [1,1,1,1,1,1,1,1],
+    snare: [0,0,1,0,0,0,1,0],
+    kick:  [1,0,0,0,1,0,0,0],
+  };
+
   const state = {
     instrument: 'piano',
+    scoreMode: 'guitar',
     chords: PRESETS.A.chords.map(simplifyChord),
+    measureCounts: PRESETS.A.chords.map(() => 1),
     activeIndex: 0,
     sourceLabel: PRESETS.A.label,
     playing: false,
   };
+
+  function setChords(chords, label){
+    state.chords = chords;
+    state.measureCounts = chords.map(() => 1);
+    state.activeIndex = 0;
+    state.sourceLabel = label;
+  }
 
   function simplifyChord(raw){
     if(!raw) return null;
@@ -295,14 +337,110 @@
   function renderChips(){
     chipRow.innerHTML = '';
     state.chords.forEach((c, i) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'bpa-chip-wrap';
+
       const chip = document.createElement('button');
       chip.className = 'bpa-chip' + (i===state.activeIndex?' active':'');
       chip.textContent = c.label;
       chip.title = c.original !== c.label ? `원래 코드: ${c.original}` : '';
       chip.addEventListener('click', () => { state.activeIndex = i; renderChips(); renderDiagram(); playChord(c); });
-      chipRow.appendChild(chip);
+      wrap.appendChild(chip);
+
+      const measureInput = document.createElement('input');
+      measureInput.type = 'number';
+      measureInput.min = '1'; measureInput.max = '16';
+      measureInput.className = 'bpa-measure-input';
+      measureInput.value = state.measureCounts[i] || 1;
+      measureInput.title = '원곡 기준 마디 수';
+      measureInput.addEventListener('change', () => {
+        let v = parseInt(measureInput.value, 10);
+        if(!v || v < 1) v = 1; if(v > 16) v = 16;
+        state.measureCounts[i] = v; measureInput.value = v;
+        renderScore();
+      });
+      wrap.appendChild(measureInput);
+
+      chipRow.appendChild(wrap);
     });
     document.getElementById('sourceLabel').textContent = state.sourceLabel;
+  }
+
+  const scoreRow = document.getElementById('scoreRow');
+  const STRING_ORDER_HIGH_TO_LOW = [5,4,3,2,1,0]; // GUITAR_SHAPES.frets 인덱스 (0=6번줄 저음 E ... 5=1번줄 고음 e)
+  const STRING_LABELS_HIGH_TO_LOW = ['e','B','G','D','A','E'];
+
+  function measureLabel(start, count){
+    return count > 1 ? `마디 ${start}-${start + count - 1}` : `마디 ${start}`;
+  }
+
+  function renderScore(){
+    if(!scoreRow) return;
+    scoreRow.innerHTML = '';
+    if(state.scoreMode === 'piano') renderPianoScore();
+    else if(state.scoreMode === 'drum') renderDrumScore();
+    else renderGuitarScore();
+  }
+
+  function renderGuitarScore(){
+    let cursor = 1;
+    state.chords.forEach((c, i) => {
+      const count = state.measureCounts[i] || 1;
+      const label = measureLabel(cursor, count);
+      cursor += count;
+      const shape = GUITAR_SHAPES[`${c.root}_${c.quality}`];
+      let body;
+      if(shape){
+        const lines = STRING_ORDER_HIGH_TO_LOW.map((idx, li) => `${STRING_LABELS_HIGH_TO_LOW[li]}|${shape.frets[idx]}`).join('\n');
+        body = `<pre class="bpa-tab-strings">${lines}</pre>${shape.barre ? '<span class="bpa-barre-tag" style="margin-top:6px; display:inline-block;">바레</span>' : ''}`;
+      } else {
+        body = `<p class="bpa-tab-empty">다이어그램 없음<br>(초급 조로 옮기는 걸 추천해요)</p>`;
+      }
+      const box = document.createElement('div');
+      box.className = 'bpa-tab-measure';
+      box.innerHTML = `<div class="bpa-tab-head">${label}</div><div class="bpa-tab-chord">${c.label}</div>${body}`;
+      scoreRow.appendChild(box);
+    });
+  }
+
+  function renderPianoScore(){
+    let cursor = 1;
+    state.chords.forEach((c, i) => {
+      const count = state.measureCounts[i] || 1;
+      const label = measureLabel(cursor, count);
+      cursor += count;
+      const notes = triadNotes(c.root, c.quality).join('-');
+      const box = document.createElement('div');
+      box.className = 'bpa-tab-measure';
+      box.innerHTML = `<div class="bpa-tab-head">${label}</div><div class="bpa-tab-chord">${c.label}</div><p class="bpa-tab-notes">${notes}</p>`;
+      scoreRow.appendChild(box);
+    });
+  }
+
+  function renderDrumScore(){
+    const total = state.measureCounts.reduce((a, b) => a + b, 0) || state.chords.length || 1;
+    const rows = [
+      {label:'하이햇', pattern:DRUM_PATTERN.hat},
+      {label:'스네어', pattern:DRUM_PATTERN.snare},
+      {label:'킥', pattern:DRUM_PATTERN.kick},
+    ];
+    for(let m = 1; m <= total; m++){
+      const gridHtml = rows.map(r => {
+        const cells = r.pattern.map(on => `<span class="bpa-tab-drum-cell${on?' on':''}"></span>`).join('');
+        return `<div class="bpa-tab-drum-row" title="${r.label}">${cells}</div>`;
+      }).join('');
+      const box = document.createElement('div');
+      box.className = 'bpa-tab-measure';
+      box.innerHTML = `<div class="bpa-tab-head">마디 ${m}</div><div class="bpa-tab-drum-grid">${gridHtml}</div>`;
+      scoreRow.appendChild(box);
+    }
+    if(total > 0){
+      const legend = document.createElement('div');
+      legend.className = 'bpa-tab-empty';
+      legend.style.cssText = 'flex:0 0 auto; max-width:90px; align-self:center;';
+      legend.innerHTML = '위부터<br>하이햇·스네어·킥<br>(모든 마디 동일)';
+      scoreRow.appendChild(legend);
+    }
   }
 
   function renderPianoSVG(matchSet){
@@ -370,9 +508,9 @@
 
   function renderDrumGrid(){
     const rows = [
-      {label:'하이햇', pattern:[1,1,1,1,1,1,1,1]},
-      {label:'스네어', pattern:[0,0,1,0,0,0,1,0]},
-      {label:'킥', pattern:[1,0,0,0,1,0,0,0]},
+      {label:'하이햇', pattern:DRUM_PATTERN.hat},
+      {label:'스네어', pattern:DRUM_PATTERN.snare},
+      {label:'킥', pattern:DRUM_PATTERN.kick},
     ];
     let html = '<div class="bpa-drum-grid">';
     rows.forEach(r => {
@@ -426,6 +564,7 @@
   function renderAll(){
     renderInstrumentTabs();
     renderChips();
+    renderScore();
     renderDiagram();
   }
 
@@ -473,7 +612,7 @@
   async function playDrumPattern(){
     await Tone.start();
     ensureSynths();
-    const kick = [1,0,0,0,1,0,0,0], snare = [0,0,1,0,0,0,1,0], hat = [1,1,1,1,1,1,1,1];
+    const {kick, snare, hat} = DRUM_PATTERN;
     let step = 0;
     const id = setInterval(() => {
       if(step >= 8){ clearInterval(id); return; }
@@ -488,9 +627,9 @@
   document.getElementById('playAllBtn').addEventListener('click', playAll);
   document.getElementById('stopBtn').addEventListener('click', stopAll);
 
-  document.querySelectorAll('.bpa-mode-btn').forEach(btn => {
+  document.querySelectorAll('#inputModeTabs .bpa-mode-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.bpa-mode-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('#inputModeTabs .bpa-mode-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       const mode = btn.dataset.mode;
       document.getElementById('textPanel').style.display = mode==='text' ? 'block' : 'none';
@@ -498,11 +637,19 @@
     });
   });
 
+  document.querySelectorAll('#scoreTabs .bpa-mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#scoreTabs .bpa-mode-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.scoreMode = btn.dataset.score;
+      renderScore();
+    });
+  });
+
   document.querySelectorAll('.bpa-preset-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const p = PRESETS[btn.dataset.preset];
-      state.chords = p.chords.map(simplifyChord).filter(Boolean);
-      state.activeIndex = 0; state.sourceLabel = p.label;
+      setChords(p.chords.map(simplifyChord).filter(Boolean), p.label);
       renderAll();
     });
   });
@@ -512,7 +659,7 @@
     const parts = raw.split(/[\s,]+/).filter(Boolean);
     const parsed = parts.map(simplifyChord).filter(Boolean);
     if(parsed.length === 0) return;
-    state.chords = parsed; state.activeIndex = 0; state.sourceLabel = '직접 입력';
+    setChords(parsed, '직접 입력');
     renderAll();
   });
 
@@ -615,7 +762,7 @@
         setUploadStatus('코드를 해석하지 못했어요. 다른 이미지로 시도해 주세요.', true);
         return;
       }
-      state.chords = parsed; state.activeIndex = 0; state.sourceLabel = '업로드한 악보';
+      setChords(parsed, '업로드한 악보');
       renderAll();
       setUploadStatus(`${parsed.length}개의 코드를 찾았어요: ${parsed.map(c=>c.label).join(' - ')}`);
     }catch(err){
