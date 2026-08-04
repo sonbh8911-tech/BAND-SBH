@@ -89,9 +89,13 @@
 }
 .bpa-chip.active{background:var(--accent); color:#1F2A25;}
 .bpa-transport{display:flex; gap:8px; align-items:center; margin-top:4px;}
-.bpa-play-btn{background:var(--surface-2); border:1px solid var(--line); color:var(--text); border-radius:10px; padding:8px 14px; font-size:13px; font-weight:500;}
+.bpa-play-btn{background:var(--surface-2); border:1px solid var(--line); color:var(--text); border-radius:10px; padding:8px 14px; font-size:13px; font-weight:500; text-decoration:none; display:inline-block;}
 .bpa-play-btn:hover{border-color:var(--accent);}
 .bpa-source-label{font-size:11.5px; color:var(--text-muted); margin-left:auto;}
+
+.bpa-sheet-toolbar{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:10px;}
+.bpa-sheet-toolbar .bpa-source-label{margin-left:0; flex:1; min-width:120px; word-break:break-all;}
+#sheetPreview iframe, #sheetPreview img{width:100%; border-radius:12px; background:#fff; display:block;}
 
 /* 다이어그램 패널 */
 .bpa-diagram{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:20px; text-align:center;}
@@ -173,10 +177,27 @@
     </div>
   </div>
 
-  <p class="bpa-section-label">4. 연주 방법 보기</p>
+  <p class="bpa-section-label">4. 편곡 악보 보기 (학생용)</p>
+  <div class="bpa-panel">
+    <label class="bpa-upload-btn" for="sheetFileInput">
+      🎼 학생들에게 보여줄 편곡 악보 첨부 (PDF 또는 이미지)
+      <input id="sheetFileInput" type="file" accept="image/*,application/pdf" style="display:none;" />
+    </label>
+    <p class="bpa-hint">이건 AI 분석 없이 파일을 화면에 그대로 보여주기만 해요. Gemini 키가 없어도 바로 쓸 수 있고, 파일이 서버로 전송되지 않아요(이 브라우저 안에서만 열려요).</p>
+    <div id="sheetViewer" style="display:none; margin-top:14px;">
+      <div class="bpa-sheet-toolbar">
+        <span id="sheetFileName" class="bpa-source-label"></span>
+        <a id="sheetDownloadLink" class="bpa-play-btn" download>⬇ 다운로드</a>
+        <button class="bpa-play-btn" id="sheetRemoveBtn">✕ 제거</button>
+      </div>
+      <div id="sheetPreview"></div>
+    </div>
+  </div>
+
+  <p class="bpa-section-label">5. 연주 방법 보기</p>
   <div class="bpa-diagram" id="diagramPanel"></div>
 
-  <p class="bpa-footer-note" id="footerNote">이 앱은 데모 프로토타입이에요. 코드 다이어그램은 자주 쓰이는 손모양을 기준으로 하며, 실제 지도 시 확인 후 사용해 주세요. 악보 업로드 기능은 Google Gemini 2.5 API로 작동하며 본인의 API 키가 필요해요.</p>
+  <p class="bpa-footer-note" id="footerNote">이 앱은 데모 프로토타입이에요. 코드 다이어그램은 자주 쓰이는 손모양을 기준으로 하며, 실제 지도 시 확인 후 사용해 주세요. 악보 코드 인식 기능은 Google Gemini API로 작동하며 본인의 API 키가 필요해요. 편곡 악보 보기는 AI 없이 파일을 그대로 보여주는 기능이라 키가 없어도 돼요.</p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
@@ -600,6 +621,38 @@
     }catch(err){
       setUploadStatus('분석 중 문제가 발생했어요. API 키와 이미지를 확인하고 다시 시도해 주세요.', true);
     }
+  });
+
+  // ---------- 편곡 악보 보기 (학생용, AI 미사용) ----------
+  let sheetObjectUrl = null;
+  const sheetFileInput = document.getElementById('sheetFileInput');
+  const sheetViewer = document.getElementById('sheetViewer');
+  const sheetPreview = document.getElementById('sheetPreview');
+  const sheetFileName = document.getElementById('sheetFileName');
+  const sheetDownloadLink = document.getElementById('sheetDownloadLink');
+
+  sheetFileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    if(sheetObjectUrl) URL.revokeObjectURL(sheetObjectUrl);
+    sheetObjectUrl = URL.createObjectURL(file);
+    sheetFileName.textContent = file.name;
+    sheetDownloadLink.href = sheetObjectUrl;
+    sheetDownloadLink.download = file.name;
+    const isPdf = (file.type === 'application/pdf') || file.name.toLowerCase().endsWith('.pdf');
+    sheetPreview.innerHTML = isPdf
+      ? `<iframe src="${sheetObjectUrl}" title="편곡 악보"></iframe>`
+      : `<img src="${sheetObjectUrl}" alt="편곡 악보" />`;
+    if(isPdf) sheetPreview.querySelector('iframe').style.height = '520px';
+    sheetViewer.style.display = 'block';
+  });
+
+  document.getElementById('sheetRemoveBtn').addEventListener('click', () => {
+    if(sheetObjectUrl) URL.revokeObjectURL(sheetObjectUrl);
+    sheetObjectUrl = null;
+    sheetPreview.innerHTML = '';
+    sheetViewer.style.display = 'none';
+    sheetFileInput.value = '';
   });
 
   loadStoredKey();
