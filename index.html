@@ -1,0 +1,608 @@
+<!-- 밴드 합주 연습 앱 프로토타입 -->
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Space+Grotesk:wght@400;500;700&display=swap');
+
+.bpa-root {
+  --bg:#1F3A34;
+  --bg-soft:#24443C;
+  --surface:#2B4F45;
+  --surface-2:#325A4F;
+  --line: rgba(244,239,230,0.16);
+  --text:#F4EFE6;
+  --text-muted:#AFC7BE;
+  --accent:#FFC24B;
+  --accent-2:#FF8A5B;
+  --piano:#8AB4F8;
+  --guitar:#E8A15B;
+  --uke:#5FC9A6;
+  --bass:#E38C88;
+  --drum:#D8B23A;
+  --radius:16px;
+  font-family:'Space Grotesk', sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  border-radius:20px;
+  padding:28px 22px 32px;
+  max-width:720px;
+  margin:0 auto;
+  box-sizing:border-box;
+  background-image:
+    radial-gradient(circle at 15% 8%, rgba(244,239,230,0.05), transparent 40%),
+    radial-gradient(circle at 85% 92%, rgba(244,239,230,0.04), transparent 45%);
+}
+.bpa-root *{box-sizing:border-box;}
+.bpa-root button{font-family:inherit; cursor:pointer;}
+.bpa-root button:focus-visible, .bpa-root input:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+
+.bpa-header{text-align:center; margin-bottom:22px;}
+.bpa-title{
+  font-family:'Kalam', cursive; font-weight:700; font-size:34px; margin:0 0 2px;
+  letter-spacing:0.5px;
+}
+.bpa-underline{display:block; margin:2px auto 10px; width:210px; height:14px;}
+.bpa-sub{color:var(--text-muted); font-size:14px; margin:0;}
+
+.bpa-section-label{
+  font-size:12px; text-transform:uppercase; letter-spacing:1.5px; color:var(--text-muted);
+  margin:0 0 10px 2px; font-weight:500;
+}
+
+/* 악기 탭 */
+.bpa-instruments{display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; margin-bottom:20px;}
+.bpa-inst-btn{
+  flex:0 0 auto; display:flex; flex-direction:column; align-items:center; gap:6px;
+  background:var(--surface); border:1px solid var(--line); border-radius:14px;
+  padding:10px 16px; color:var(--text-muted); font-size:12px; font-weight:500;
+  position:relative; transition:transform .15s ease, background .15s ease, color .15s ease;
+}
+.bpa-inst-btn:hover{transform:translateY(-2px);}
+.bpa-inst-dot{width:14px; height:14px; border-radius:50%;}
+.bpa-inst-btn.active{background:var(--surface-2); color:var(--text);}
+.bpa-inst-btn.active .bpa-circle{display:block;}
+.bpa-circle{display:none; position:absolute; inset:-6px -10px auto -10px; top:-8px; width:calc(100% + 20px); height:46px; pointer-events:none;}
+
+/* 입력 모드 탭 */
+.bpa-mode-tabs{display:flex; gap:6px; background:var(--surface); border-radius:12px; padding:4px; margin-bottom:14px;}
+.bpa-mode-btn{flex:1; border:none; background:transparent; color:var(--text-muted); padding:8px 10px; border-radius:9px; font-size:13px; font-weight:500;}
+.bpa-mode-btn.active{background:var(--accent); color:#1F2A25; font-weight:700;}
+
+.bpa-panel{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:16px; margin-bottom:18px;}
+.bpa-input-row{display:flex; gap:8px; margin-bottom:10px;}
+.bpa-text-input{flex:1; background:var(--bg-soft); border:1px solid var(--line); color:var(--text); border-radius:10px; padding:10px 12px; font-size:14px; font-family:inherit;}
+.bpa-apply-btn{background:var(--accent); color:#1F2A25; border:none; border-radius:10px; padding:10px 16px; font-weight:700; font-size:14px;}
+.bpa-preset-row{display:flex; gap:6px; flex-wrap:wrap;}
+.bpa-preset-btn{background:var(--bg-soft); border:1px solid var(--line); color:var(--text-muted); border-radius:8px; padding:6px 10px; font-size:12px;}
+.bpa-preset-btn:hover{color:var(--text); border-color:var(--accent);}
+
+.bpa-upload-btn{background:var(--bg-soft); border:1.5px dashed var(--line); border-radius:12px; padding:20px; width:100%; text-align:center; color:var(--text-muted); font-size:13px;}
+.bpa-upload-btn:hover{border-color:var(--accent); color:var(--text);}
+.bpa-hint{font-size:11.5px; color:var(--text-muted); margin-top:8px; line-height:1.5;}
+.bpa-status{font-size:13px; margin-top:10px; color:var(--accent);}
+.bpa-status.err{color:var(--accent-2);}
+
+/* 코드 진행 칩 */
+.bpa-chip-row{display:flex; gap:8px; overflow-x:auto; padding:6px 2px 10px;}
+.bpa-chip{
+  flex:0 0 auto; position:relative; background:var(--bg-soft); border:1px solid var(--line);
+  color:var(--text); font-family:'Kalam', cursive; font-weight:700; font-size:20px;
+  padding:10px 18px; border-radius:12px;
+}
+.bpa-chip.active{background:var(--accent); color:#1F2A25;}
+.bpa-transport{display:flex; gap:8px; align-items:center; margin-top:4px;}
+.bpa-play-btn{background:var(--surface-2); border:1px solid var(--line); color:var(--text); border-radius:10px; padding:8px 14px; font-size:13px; font-weight:500;}
+.bpa-play-btn:hover{border-color:var(--accent);}
+.bpa-source-label{font-size:11.5px; color:var(--text-muted); margin-left:auto;}
+
+/* 다이어그램 패널 */
+.bpa-diagram{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:20px; text-align:center;}
+.bpa-diagram-title{font-family:'Kalam', cursive; font-size:22px; margin:0 0 12px;}
+.piano-svg{width:100%; max-width:420px; height:auto;}
+.fret-svg{width:150px; height:auto;}
+.bpa-fret-wrap{display:flex; flex-direction:column; align-items:center; gap:6px;}
+.bpa-barre-tag{font-size:11px; background:var(--accent-2); color:#1F2A25; padding:2px 8px; border-radius:6px; font-weight:700;}
+.bpa-bass-note{font-family:'Kalam', cursive; font-size:56px; font-weight:700; color:var(--bass); margin:6px 0;}
+.bpa-fallback{color:var(--text-muted); font-size:13px; line-height:1.6; padding:20px 10px;}
+
+/* 드럼 */
+.bpa-drum-grid{display:flex; flex-direction:column; gap:8px; margin:14px 0;}
+.bpa-drum-row{display:flex; align-items:center; gap:8px;}
+.bpa-drum-label{width:60px; font-size:12px; color:var(--text-muted); text-align:right;}
+.bpa-drum-cells{display:flex; gap:6px; flex:1;}
+.bpa-drum-cell{flex:1; aspect-ratio:1; border-radius:8px; background:var(--bg-soft); border:1px solid var(--line);}
+.bpa-drum-cell.on{background:var(--drum);}
+.bpa-drum-cell.beat{outline:2px solid var(--accent);}
+
+.bpa-footer-note{font-size:11.5px; color:var(--text-muted); text-align:center; margin-top:20px; line-height:1.6;}
+
+@media (max-width:480px){
+  .bpa-title{font-size:27px;}
+  .bpa-bass-note{font-size:42px;}
+}
+</style>
+
+<div class="bpa-root" id="bpaRoot">
+  <div class="bpa-header">
+    <h1 class="bpa-title">밴드 합주 연습</h1>
+    <svg class="bpa-underline" viewBox="0 0 210 14" fill="none"><path d="M4 8C40 2 90 12 105 6C120 0 170 10 206 5" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/></svg>
+    <p class="bpa-sub">악기를 고르고, 코드를 단순하게 확인해서 바로 합주해보세요</p>
+  </div>
+
+  <p class="bpa-section-label">1. 악기 선택</p>
+  <div class="bpa-instruments" id="instRow"></div>
+
+  <p class="bpa-section-label">2. 코드 진행 만들기</p>
+  <div class="bpa-mode-tabs">
+    <button class="bpa-mode-btn active" data-mode="text">직접 입력</button>
+    <button class="bpa-mode-btn" data-mode="image">악보 업로드</button>
+  </div>
+
+  <div class="bpa-panel" id="textPanel">
+    <div class="bpa-input-row">
+      <input class="bpa-text-input" id="chordInput" placeholder="예: C G Am F" />
+      <button class="bpa-apply-btn" id="applyBtn">적용</button>
+    </div>
+    <div class="bpa-preset-row">
+      <button class="bpa-preset-btn" data-preset="A">연습곡 A (C-G-Am-F)</button>
+      <button class="bpa-preset-btn" data-preset="B">연습곡 B (G-D-Em-C)</button>
+      <button class="bpa-preset-btn" data-preset="C">연습곡 C (Am-F-C-G)</button>
+    </div>
+  </div>
+
+  <div class="bpa-panel" id="imagePanel" style="display:none;">
+    <p class="bpa-hint" style="margin-top:0;">이 기능은 Google Gemini 2.5 API로 작동해요. 본인의 Gemini API 키가 필요해요 (<a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" style="color:var(--accent);">Google AI Studio에서 무료 발급</a>).</p>
+    <div class="bpa-input-row">
+      <input id="geminiKeyInput" type="password" class="bpa-text-input" placeholder="Gemini API 키 붙여넣기" autocomplete="off" />
+      <button class="bpa-apply-btn" id="saveKeyBtn">저장</button>
+    </div>
+    <p class="bpa-hint" id="keyStatusHint">아직 저장된 키가 없어요. 키는 본인 계정에만 저장되고 다른 사람에게 공유되지 않아요.</p>
+    <label class="bpa-upload-btn" for="fileInput">
+      📄 악보 이미지를 선택하세요 (사진 또는 스캔)
+      <input id="fileInput" type="file" accept="image/*" style="display:none;" />
+    </label>
+    <p class="bpa-hint">코드 기호(C, G7, Dm 등)가 적힌 코드보·리드시트에서 가장 정확해요. 음표만 있는 오선 악보는 인식이 정확하지 않을 수 있어요.</p>
+    <p class="bpa-status" id="uploadStatus"></p>
+  </div>
+
+  <p class="bpa-section-label">3. 코드 진행</p>
+  <div class="bpa-panel">
+    <div class="bpa-chip-row" id="chipRow"></div>
+    <div class="bpa-transport">
+      <button class="bpa-play-btn" id="playAllBtn">▶ 전체 재생</button>
+      <button class="bpa-play-btn" id="stopBtn">■ 정지</button>
+      <span class="bpa-source-label" id="sourceLabel">연습곡 A</span>
+    </div>
+  </div>
+
+  <p class="bpa-section-label">4. 연주 방법 보기</p>
+  <div class="bpa-diagram" id="diagramPanel"></div>
+
+  <p class="bpa-footer-note" id="footerNote">이 앱은 데모 프로토타입이에요. 코드 다이어그램은 자주 쓰이는 손모양을 기준으로 하며, 실제 지도 시 확인 후 사용해 주세요. 악보 업로드 기능은 Google Gemini 2.5 API로 작동하며 본인의 API 키가 필요해요.</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+<script>
+(function(){
+  const NOTES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  const FLAT_TO_SHARP = {Db:'C#',Eb:'D#',Gb:'F#',Ab:'G#',Bb:'A#'};
+
+  const INSTRUMENTS = [
+    {id:'piano', name:'피아노', color:'var(--piano)'},
+    {id:'guitar', name:'기타', color:'var(--guitar)'},
+    {id:'ukulele', name:'우쿨렐레', color:'var(--uke)'},
+    {id:'bass', name:'베이스', color:'var(--bass)'},
+    {id:'drum', name:'드럼', color:'var(--drum)'},
+  ];
+
+  const PRESETS = {
+    A: {label:'연습곡 A', chords:['C','G','Am','F']},
+    B: {label:'연습곡 B', chords:['G','D','Em','C']},
+    C: {label:'연습곡 C', chords:['Am','F','C','G']},
+  };
+
+  const GUITAR_SHAPES = {
+    'C_major':{frets:['x',3,2,0,1,0]}, 'D_major':{frets:['x','x',0,2,3,2]},
+    'E_major':{frets:[0,2,2,1,0,0]}, 'F_major':{frets:[1,3,3,2,1,1], barre:true},
+    'G_major':{frets:[3,2,0,0,0,3]}, 'A_major':{frets:['x',0,2,2,2,0]},
+    'B_major':{frets:['x',2,4,4,4,2], barre:true},
+    'A_minor':{frets:['x',0,2,2,1,0]}, 'B_minor':{frets:['x',2,4,4,3,2], barre:true},
+    'C_minor':{frets:['x',3,5,5,4,3], barre:true}, 'D_minor':{frets:['x','x',0,2,3,1]},
+    'E_minor':{frets:[0,2,2,0,0,0]}, 'F_minor':{frets:[1,3,3,1,1,1], barre:true},
+    'G_minor':{frets:[3,5,5,3,3,3], barre:true},
+  };
+  const UKULELE_SHAPES = {
+    'C_major':{frets:[0,0,0,3]}, 'D_major':{frets:[2,2,2,0]},
+    'E_major':{frets:[4,4,4,4], barre:true}, 'F_major':{frets:[2,0,1,0]},
+    'G_major':{frets:[0,2,3,2]}, 'A_major':{frets:[2,1,0,0]},
+    'B_major':{frets:[4,3,2,2], barre:true},
+    'A_minor':{frets:[2,0,0,0]}, 'B_minor':{frets:[4,2,2,2], barre:true},
+    'C_minor':{frets:[0,3,3,3]}, 'D_minor':{frets:[2,2,1,0]},
+    'E_minor':{frets:[0,4,3,2]}, 'F_minor':{frets:[1,0,1,3]},
+    'G_minor':{frets:[0,2,1,0]},
+  };
+
+  const state = {
+    instrument: 'piano',
+    chords: PRESETS.A.chords.map(simplifyChord),
+    activeIndex: 0,
+    sourceLabel: PRESETS.A.label,
+    playing: false,
+  };
+
+  function simplifyChord(raw){
+    if(!raw) return null;
+    raw = String(raw).trim();
+    const m = raw.match(/^([A-Ga-g])([#b]?)/);
+    if(!m) return null;
+    let root = m[1].toUpperCase() + m[2];
+    let rest = raw.slice(m[0].length);
+    const slash = rest.indexOf('/');
+    if(slash !== -1) rest = rest.slice(0, slash);
+    rest = rest.trim();
+    let quality = 'major';
+    if(/^dim/i.test(rest)) quality = 'dim';
+    else if(/^m(?!aj)/i.test(rest)) quality = 'minor';
+    else if(/^(aug|\+)/i.test(rest)) quality = 'aug';
+    root = FLAT_TO_SHARP[root] || root;
+    if(NOTES.indexOf(root) === -1) return null;
+    const label = root + (quality==='minor'?'m':quality==='dim'?'dim':quality==='aug'?'aug':'');
+    return {root, quality, label, original: raw};
+  }
+
+  function triadNotes(root, quality){
+    const idx = NOTES.indexOf(root);
+    const offsets = {major:[0,4,7], minor:[0,3,7], dim:[0,3,6], aug:[0,4,8]}[quality] || [0,4,7];
+    return offsets.map(o => NOTES[(idx + o + 12) % 12]);
+  }
+
+  // ---------- rendering ----------
+  const instRow = document.getElementById('instRow');
+  INSTRUMENTS.forEach(inst => {
+    const btn = document.createElement('button');
+    btn.className = 'bpa-inst-btn' + (inst.id===state.instrument?' active':'');
+    btn.dataset.inst = inst.id;
+    btn.innerHTML = `<svg class="bpa-circle" viewBox="0 0 100 46"><path d="M6 30C20 8 80 8 94 30C80 40 20 40 6 30Z" fill="none" stroke="${inst.color}" stroke-width="2.5" opacity="0.55"/></svg>
+      <span class="bpa-inst-dot" style="background:${inst.color}"></span>${inst.name}`;
+    btn.addEventListener('click', () => { state.instrument = inst.id; renderAll(); });
+    instRow.appendChild(btn);
+  });
+
+  function renderInstrumentTabs(){
+    [...instRow.children].forEach(btn => btn.classList.toggle('active', btn.dataset.inst===state.instrument));
+  }
+
+  const chipRow = document.getElementById('chipRow');
+  function renderChips(){
+    chipRow.innerHTML = '';
+    state.chords.forEach((c, i) => {
+      const chip = document.createElement('button');
+      chip.className = 'bpa-chip' + (i===state.activeIndex?' active':'');
+      chip.textContent = c.label;
+      chip.title = c.original !== c.label ? `원래 코드: ${c.original}` : '';
+      chip.addEventListener('click', () => { state.activeIndex = i; renderChips(); renderDiagram(); playChord(c); });
+      chipRow.appendChild(chip);
+    });
+    document.getElementById('sourceLabel').textContent = state.sourceLabel;
+  }
+
+  function renderPianoSVG(matchSet){
+    const whiteLetters = ['C','D','E','F','G','A','B'];
+    const blackAfter = {C:'C#',D:'D#',F:'F#',G:'G#',A:'A#'};
+    const octaves = 2, keyW = 34, keyH = 110, blackW = 20, blackH = 68;
+    const totalWhite = whiteLetters.length * octaves;
+    const width = totalWhite*keyW + 2, height = keyH + 14;
+    let svg = `<svg viewBox="0 0 ${width} ${height}" class="piano-svg">`;
+    let idx = 0;
+    for(let o=0;o<octaves;o++){
+      whiteLetters.forEach(letter => {
+        const x = idx*keyW;
+        const active = matchSet.has(letter);
+        svg += `<rect x="${x}" y="0" width="${keyW-1}" height="${keyH}" rx="4" fill="${active?'var(--piano)':'#F4EFE6'}" stroke="#16261F" stroke-width="1.4"/>`;
+        if(active) svg += `<text x="${x+keyW/2}" y="${keyH-14}" text-anchor="middle" font-size="11" fill="#16261F" font-weight="700">${letter}</text>`;
+        idx++;
+      });
+    }
+    idx = 0;
+    for(let o=0;o<octaves;o++){
+      whiteLetters.forEach(letter => {
+        if(blackAfter[letter]){
+          const note = blackAfter[letter];
+          const x = (idx+1)*keyW - blackW/2;
+          const active = matchSet.has(note);
+          svg += `<rect x="${x}" y="0" width="${blackW}" height="${blackH}" rx="3" fill="${active?'var(--accent)':'#16261F'}" stroke="#0B120F" stroke-width="1"/>`;
+          if(active) svg += `<text x="${x+blackW/2}" y="${blackH-10}" text-anchor="middle" font-size="8.5" fill="#16261F" font-weight="700">${note}</text>`;
+        }
+        idx++;
+      });
+    }
+    svg += '</svg>';
+    return svg;
+  }
+
+  function renderFretSVG(shape, stringsCount){
+    const frets = shape.frets;
+    const w = 150, marginX = 20, marginTop = 26, fretH = 26, numFrets = 5;
+    const stringGap = (w - 2*marginX) / (stringsCount-1);
+    let svg = `<svg viewBox="0 0 ${w} ${marginTop+fretH*numFrets+16}" class="fret-svg">`;
+    svg += `<rect x="${marginX}" y="${marginTop}" width="${w-2*marginX}" height="4" fill="var(--text)"/>`;
+    for(let f=1; f<=numFrets; f++){
+      const y = marginTop + f*fretH;
+      svg += `<line x1="${marginX}" y1="${y}" x2="${w-marginX}" y2="${y}" stroke="var(--line)" stroke-width="1.5"/>`;
+    }
+    for(let s=0; s<stringsCount; s++){
+      const x = marginX + s*stringGap;
+      svg += `<line x1="${x}" y1="${marginTop}" x2="${x}" y2="${marginTop+fretH*numFrets}" stroke="var(--line)" stroke-width="1.5"/>`;
+    }
+    frets.forEach((f, s) => {
+      const x = marginX + s*stringGap;
+      if(f === 'x'){
+        svg += `<text x="${x}" y="${marginTop-10}" text-anchor="middle" font-size="13" fill="var(--text-muted)">&#10005;</text>`;
+      } else if(f === 0){
+        svg += `<circle cx="${x}" cy="${marginTop-13}" r="5.5" fill="none" stroke="var(--text)" stroke-width="2"/>`;
+      } else {
+        const y = marginTop + (f-0.5)*fretH;
+        svg += `<circle cx="${x}" cy="${y}" r="8" fill="var(--accent)"/>`;
+      }
+    });
+    svg += '</svg>';
+    return svg;
+  }
+
+  function renderDrumGrid(){
+    const rows = [
+      {label:'하이햇', pattern:[1,1,1,1,1,1,1,1]},
+      {label:'스네어', pattern:[0,0,1,0,0,0,1,0]},
+      {label:'킥', pattern:[1,0,0,0,1,0,0,0]},
+    ];
+    let html = '<div class="bpa-drum-grid">';
+    rows.forEach(r => {
+      html += `<div class="bpa-drum-row"><span class="bpa-drum-label">${r.label}</span><div class="bpa-drum-cells">`;
+      r.pattern.forEach((on, i) => { html += `<div class="bpa-drum-cell${on?' on':''}" data-step="${i}"></div>`; });
+      html += '</div></div>';
+    });
+    html += '</div>';
+    return html;
+  }
+
+  const diagramPanel = document.getElementById('diagramPanel');
+  function renderDiagram(){
+    if(state.instrument === 'drum'){
+      diagramPanel.innerHTML = `<p class="bpa-diagram-title">기본 리듬 패턴</p>${renderDrumGrid()}
+        <button class="bpa-play-btn" id="drumPlayBtn">▶ 리듬 듣기</button>
+        <p class="bpa-hint" style="margin-top:12px;">드럼은 코드가 없는 대신, 곡 전체에서 이 리듬을 반복하며 합주 박자를 맞춰요.</p>`;
+      document.getElementById('drumPlayBtn').addEventListener('click', playDrumPattern);
+      return;
+    }
+    const chord = state.chords[state.activeIndex];
+    if(!chord){ diagramPanel.innerHTML = '<p class="bpa-fallback">코드를 먼저 입력해 주세요.</p>'; return; }
+
+    if(state.instrument === 'piano'){
+      const notes = new Set(triadNotes(chord.root, chord.quality));
+      diagramPanel.innerHTML = `<p class="bpa-diagram-title">${chord.label} 코드</p>${renderPianoSVG(notes)}
+        <p class="bpa-hint">색칠된 건반 3개를 함께 눌러요.</p>`;
+      return;
+    }
+    if(state.instrument === 'bass'){
+      diagramPanel.innerHTML = `<p class="bpa-diagram-title">${chord.label} 코드</p>
+        <div class="bpa-bass-note">${chord.root}</div>
+        <p class="bpa-hint">박자에 맞춰 이 음(근음)을 한 음씩 연주해요.</p>`;
+      return;
+    }
+    const dict = state.instrument === 'guitar' ? GUITAR_SHAPES : UKULELE_SHAPES;
+    const strings = state.instrument === 'guitar' ? 6 : 4;
+    const key = `${chord.root}_${chord.quality}`;
+    const shape = dict[key];
+    if(!shape){
+      diagramPanel.innerHTML = `<p class="bpa-diagram-title">${chord.label} 코드</p>
+        <p class="bpa-fallback">이 코드는 아직 손모양 그림이 없어요.<br>초급 단계에서는 비슷한 자연음(#, ♭ 없는) 조로 옮기는 걸 추천해요.<br>피아노 탭에서 음은 확인할 수 있어요.</p>`;
+      return;
+    }
+    diagramPanel.innerHTML = `<p class="bpa-diagram-title">${chord.label} 코드</p>
+      <div class="bpa-fret-wrap">${renderFretSVG(shape, strings)}
+      ${shape.barre ? '<span class="bpa-barre-tag">바레 코드 (조금 어려워요)</span>' : ''}</div>
+      <p class="bpa-hint">✕ = 연주하지 않는 줄, ○ = 그대로 튕기는 줄, 점 = 누르는 위치</p>`;
+  }
+
+  function renderAll(){
+    renderInstrumentTabs();
+    renderChips();
+    renderDiagram();
+  }
+
+  // ---------- audio ----------
+  let synths = null;
+  function ensureSynths(){
+    if(synths) return;
+    synths = {
+      poly: new Tone.PolySynth(Tone.Synth, {oscillator:{type:'triangle'}}).toDestination(),
+      pluck: new Tone.PluckSynth().toDestination(),
+      bass: new Tone.MonoSynth({oscillator:{type:'sine'}}).toDestination(),
+      kick: new Tone.MembraneSynth().toDestination(),
+      snare: new Tone.NoiseSynth({noise:{type:'white'}, envelope:{attack:0.001, decay:0.15, sustain:0}}).toDestination(),
+      hat: new Tone.MetalSynth({envelope:{attack:0.001, decay:0.05, release:0.01}}).toDestination(),
+    };
+  }
+
+  async function playChord(chord){
+    if(!chord) return;
+    await Tone.start();
+    ensureSynths();
+    const notes = triadNotes(chord.root, chord.quality).map(n => n + '4');
+    if(state.instrument === 'bass'){
+      synths.bass.triggerAttackRelease(chord.root + '2', '8n');
+    } else if(state.instrument === 'guitar' || state.instrument === 'ukulele'){
+      notes.forEach((n, i) => setTimeout(() => synths.pluck.triggerAttackRelease(n, '8n'), i*35));
+    } else {
+      synths.poly.triggerAttackRelease(notes, '4n');
+    }
+  }
+
+  let playTimer = null;
+  async function playAll(){
+    stopAll();
+    await Tone.start();
+    let i = 0;
+    playTimer = setInterval(() => {
+      if(i >= state.chords.length){ stopAll(); return; }
+      state.activeIndex = i; renderChips(); renderDiagram(); playChord(state.chords[i]);
+      i++;
+    }, 900);
+  }
+  function stopAll(){ if(playTimer){ clearInterval(playTimer); playTimer = null; } }
+
+  async function playDrumPattern(){
+    await Tone.start();
+    ensureSynths();
+    const kick = [1,0,0,0,1,0,0,0], snare = [0,0,1,0,0,0,1,0], hat = [1,1,1,1,1,1,1,1];
+    let step = 0;
+    const id = setInterval(() => {
+      if(step >= 8){ clearInterval(id); return; }
+      if(kick[step]) synths.kick.triggerAttackRelease('C1', '8n');
+      if(snare[step]) synths.snare.triggerAttackRelease('8n');
+      if(hat[step]) synths.hat.triggerAttackRelease('16n');
+      step++;
+    }, 220);
+  }
+
+  // ---------- events ----------
+  document.getElementById('playAllBtn').addEventListener('click', playAll);
+  document.getElementById('stopBtn').addEventListener('click', stopAll);
+
+  document.querySelectorAll('.bpa-mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.bpa-mode-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const mode = btn.dataset.mode;
+      document.getElementById('textPanel').style.display = mode==='text' ? 'block' : 'none';
+      document.getElementById('imagePanel').style.display = mode==='image' ? 'block' : 'none';
+    });
+  });
+
+  document.querySelectorAll('.bpa-preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const p = PRESETS[btn.dataset.preset];
+      state.chords = p.chords.map(simplifyChord).filter(Boolean);
+      state.activeIndex = 0; state.sourceLabel = p.label;
+      renderAll();
+    });
+  });
+
+  document.getElementById('applyBtn').addEventListener('click', () => {
+    const raw = document.getElementById('chordInput').value;
+    const parts = raw.split(/[\s,]+/).filter(Boolean);
+    const parsed = parts.map(simplifyChord).filter(Boolean);
+    if(parsed.length === 0) return;
+    state.chords = parsed; state.activeIndex = 0; state.sourceLabel = '직접 입력';
+    renderAll();
+  });
+
+  function fileToBase64(file){
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(String(r.result).split(',')[1]);
+      r.onerror = reject;
+      r.readAsDataURL(file);
+    });
+  }
+
+  function setUploadStatus(msg, isErr){
+    const el = document.getElementById('uploadStatus');
+    el.textContent = msg;
+    el.classList.toggle('err', !!isErr);
+  }
+
+  const EXTRACT_SYSTEM_PROMPT = '당신은 악보 이미지에서 코드 기호를 순서대로 추출하는 도우미입니다. ' +
+    '이미지에서 코드 기호(C, G7, Dm7, Am, Bb 등)를 순서대로 찾고, 초보자를 위해 확장/변형 코드(7th, 9th, sus, add, 6, dim7, m7b5, 슬래시 코드의 베이스음 등)는 ' +
+    '가장 가까운 기본 3화음(메이저 또는 마이너)으로 단순화하세요. 예: Cmaj7→C, Dm7→Dm, G7→G, Am7→Am, F#m7b5→F#dim, C/E→C. ' +
+    '응답은 반드시 JSON 배열만 출력하세요. 예: ["C","G","Am","F"]. 코드 기호를 전혀 찾을 수 없으면 빈 배열 []을 출력하세요. ' +
+    '다른 설명, 코드블록 표시(```), 추가 텍스트는 절대 포함하지 마세요.';
+
+  // ---------- Gemini API key (저장은 본인 계정 전용 개인 저장소에만) ----------
+  const GEMINI_MODEL = 'gemini-2.5-flash';
+  let geminiApiKey = '';
+  const keyInput = document.getElementById('geminiKeyInput');
+  const keyStatusHint = document.getElementById('keyStatusHint');
+
+  function setKeyStatus(msg){ keyStatusHint.textContent = msg; }
+
+  async function loadStoredKey(){
+    try{
+      const res = await window.storage.get('gemini-api-key', false);
+      if(res && res.value){
+        geminiApiKey = res.value;
+        keyInput.value = res.value;
+        setKeyStatus('저장된 키를 불러왔어요. 다른 사람에게는 보이지 않아요.');
+      }
+    }catch(e){ /* 저장된 키 없음 - 무시 */ }
+  }
+
+  document.getElementById('saveKeyBtn').addEventListener('click', async () => {
+    const val = keyInput.value.trim();
+    if(!val) return;
+    geminiApiKey = val;
+    try{
+      await window.storage.set('gemini-api-key', val, false);
+      setKeyStatus('저장했어요. 이 계정으로 열 때마다 자동으로 불러와요.');
+    }catch(e){
+      setKeyStatus('이번 세션에서만 사용돼요 (저장은 실패했어요).');
+    }
+  });
+
+  document.getElementById('fileInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    if(!geminiApiKey){
+      setUploadStatus('먼저 위에 Gemini API 키를 붙여넣고 "저장"을 눌러주세요.', true);
+      e.target.value = '';
+      return;
+    }
+    setUploadStatus('악보를 분석하는 중...');
+    try{
+      const base64 = await fileToBase64(file);
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': geminiApiKey,
+        },
+        body: JSON.stringify({
+          system_instruction: {parts: [{text: EXTRACT_SYSTEM_PROMPT}]},
+          contents: [{
+            role: 'user',
+            parts: [
+              {inline_data: {mime_type: file.type || 'image/png', data: base64}},
+              {text: '이 악보 이미지에서 코드를 순서대로 추출하고 초보자용으로 단순화해서 JSON 배열로만 응답하세요.'}
+            ]
+          }],
+          generationConfig: {temperature: 0}
+        })
+      });
+      const data = await res.json();
+      if(data.error){
+        setUploadStatus(`Gemini API 오류: ${data.error.message || 'API 키를 확인해 주세요.'}`, true);
+        return;
+      }
+      const parts = (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) || [];
+      const textBlock = parts.map(p => p.text || '').join('');
+      const clean = textBlock.replace(/```json|```/g, '').trim();
+      const arr = JSON.parse(clean);
+      if(!Array.isArray(arr) || arr.length === 0){
+        setUploadStatus('코드 기호를 찾지 못했어요. 코드가 적힌 코드보(리드시트) 형태의 악보를 사용해 보세요.', true);
+        return;
+      }
+      const parsed = arr.map(simplifyChord).filter(Boolean);
+      if(parsed.length === 0){
+        setUploadStatus('코드를 해석하지 못했어요. 다른 이미지로 시도해 주세요.', true);
+        return;
+      }
+      state.chords = parsed; state.activeIndex = 0; state.sourceLabel = '업로드한 악보';
+      renderAll();
+      setUploadStatus(`${parsed.length}개의 코드를 찾았어요: ${parsed.map(c=>c.label).join(' - ')}`);
+    }catch(err){
+      setUploadStatus('분석 중 문제가 발생했어요. API 키와 이미지를 확인하고 다시 시도해 주세요.', true);
+    }
+  });
+
+  loadStoredKey();
+  renderAll();
+})();
+</script>
