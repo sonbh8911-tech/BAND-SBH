@@ -156,10 +156,10 @@
     </div>
     <p class="bpa-hint" id="keyStatusHint">아직 저장된 키가 없어요. 키는 본인 계정에만 저장되고 다른 사람에게 공유되지 않아요.</p>
     <label class="bpa-upload-btn" for="fileInput">
-      📄 악보 이미지를 선택하세요 (사진 또는 스캔)
-      <input id="fileInput" type="file" accept="image/*" style="display:none;" />
+      📄 악보 이미지 또는 PDF를 선택하세요 (사진, 스캔, PDF 모두 가능)
+      <input id="fileInput" type="file" accept="image/*,application/pdf" style="display:none;" />
     </label>
-    <p class="bpa-hint">코드 기호(C, G7, Dm 등)가 적힌 코드보·리드시트에서 가장 정확해요. 음표만 있는 오선 악보는 인식이 정확하지 않을 수 있어요.</p>
+    <p class="bpa-hint">코드 기호(C, G7, Dm 등)가 적힌 코드보·리드시트에서 가장 정확해요. 음표만 있는 오선 악보는 인식이 정확하지 않을 수 있어요. 파일 크기는 20MB를 넘지 않게 해주세요.</p>
     <p class="bpa-status" id="uploadStatus"></p>
   </div>
 
@@ -510,14 +510,14 @@
     el.classList.toggle('err', !!isErr);
   }
 
-  const EXTRACT_SYSTEM_PROMPT = '당신은 악보 이미지에서 코드 기호를 순서대로 추출하는 도우미입니다. ' +
-    '이미지에서 코드 기호(C, G7, Dm7, Am, Bb 등)를 순서대로 찾고, 초보자를 위해 확장/변형 코드(7th, 9th, sus, add, 6, dim7, m7b5, 슬래시 코드의 베이스음 등)는 ' +
+  const EXTRACT_SYSTEM_PROMPT = '당신은 악보(이미지 또는 PDF)에서 코드 기호를 순서대로 추출하는 도우미입니다. ' +
+    '코드 기호(C, G7, Dm7, Am, Bb 등)를 순서대로 찾고, 초보자를 위해 확장/변형 코드(7th, 9th, sus, add, 6, dim7, m7b5, 슬래시 코드의 베이스음 등)는 ' +
     '가장 가까운 기본 3화음(메이저 또는 마이너)으로 단순화하세요. 예: Cmaj7→C, Dm7→Dm, G7→G, Am7→Am, F#m7b5→F#dim, C/E→C. ' +
     '응답은 반드시 JSON 배열만 출력하세요. 예: ["C","G","Am","F"]. 코드 기호를 전혀 찾을 수 없으면 빈 배열 []을 출력하세요. ' +
     '다른 설명, 코드블록 표시(```), 추가 텍스트는 절대 포함하지 마세요.';
 
   // ---------- Gemini API key (저장은 본인 계정 전용 개인 저장소에만) ----------
-  const GEMINI_MODEL = 'gemini-2.5-flash';
+  const GEMINI_MODEL = 'gemini-flash-latest'; // 구글이 관리하는 별칭: 최신 Flash 모델로 자동 연결돼요
   let geminiApiKey = '';
   const keyInput = document.getElementById('geminiKeyInput');
   const keyStatusHint = document.getElementById('keyStatusHint');
@@ -569,8 +569,8 @@
           contents: [{
             role: 'user',
             parts: [
-              {inline_data: {mime_type: file.type || 'image/png', data: base64}},
-              {text: '이 악보 이미지에서 코드를 순서대로 추출하고 초보자용으로 단순화해서 JSON 배열로만 응답하세요.'}
+              {inline_data: {mime_type: file.type || (file.name && file.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/png'), data: base64}},
+              {text: '이 악보(이미지 또는 PDF)에서 코드를 순서대로 추출하고 초보자용으로 단순화해서 JSON 배열로만 응답하세요. PDF에 여러 페이지가 있으면 첫 페이지부터 순서대로 모두 반영하세요.'}
             ]
           }],
           generationConfig: {temperature: 0}
